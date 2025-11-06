@@ -1,0 +1,174 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const BudgetCalculatorApp());
+}
+
+class BudgetCalculatorApp extends StatelessWidget {
+  const BudgetCalculatorApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Budget Calculator',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.teal,
+        useMaterial3: true,
+      ),
+      home: const BudgetCalculatorScreen(),
+    );
+  }
+}
+
+class BudgetCalculatorScreen extends StatefulWidget {
+  const BudgetCalculatorScreen({super.key});
+
+  @override
+  State<BudgetCalculatorScreen> createState() => _BudgetCalculatorScreenState();
+}
+
+class _BudgetCalculatorScreenState extends State<BudgetCalculatorScreen> {
+  // Controllers for text input fields
+  final TextEditingController _incomeController = TextEditingController();
+  final TextEditingController _rentController = TextEditingController();
+  final TextEditingController _foodController = TextEditingController();
+  final TextEditingController _transportController = TextEditingController();
+  final TextEditingController _othersController = TextEditingController();
+
+  double? _balance;
+  String _message = '';
+  Color _messageColor = Colors.black;
+
+  void _calculateBalance() {
+    // Parse and validate inputs
+    final income = double.tryParse(_incomeController.text);
+    final rent = double.tryParse(_rentController.text) ?? 0;
+    final food = double.tryParse(_foodController.text) ?? 0;
+    final transport = double.tryParse(_transportController.text) ?? 0;
+    final others = double.tryParse(_othersController.text) ?? 0;
+
+    if (income == null || income <= 0) {
+      setState(() {
+        _message = "Please enter a valid positive income.";
+        _messageColor = Colors.red;
+        _balance = null;
+      });
+      return;
+    }
+
+    // Calculate remaining balance
+    final totalExpenses = rent + food + transport + others;
+    final balance = income - totalExpenses;
+
+    setState(() {
+      _balance = balance;
+      if (balance < 0) {
+        _message = "You are overspending! Balance: ₹${balance.toStringAsFixed(2)}";
+        _messageColor = Colors.red;
+      } else {
+        _message = "Good job! Remaining Balance: ₹${balance.toStringAsFixed(2)}";
+        _messageColor = Colors.green;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Budget Calculator"),
+        centerTitle: true,
+        backgroundColor: Colors.teal,
+      ),
+      body: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFE0F7FA), Colors.white],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                "Enter your monthly details:",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+
+              // Income
+              _buildInputField("Monthly Income (₹)", _incomeController),
+
+              // Rent/EMI
+              _buildInputField("Rent / EMI (₹)", _rentController),
+
+              // Food
+              _buildInputField("Food Expenses (₹)", _foodController),
+
+              // Transport
+              _buildInputField("Transport Expenses (₹)", _transportController),
+
+              // Other
+              _buildInputField("Other Expenses (₹)", _othersController),
+
+              const SizedBox(height: 25),
+
+              // Calculate button
+              ElevatedButton(
+                onPressed: _calculateBalance,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text(
+                  "Calculate Balance",
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              // Output message
+              if (_message.isNotEmpty)
+                Center(
+                  child: Text(
+                    _message,
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: _messageColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Reusable text field widget
+  Widget _buildInputField(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+      ),
+    );
+  }
+}
